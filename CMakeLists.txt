@@ -1,30 +1,39 @@
-cmake_minimum_required( VERSION 3.1 )
+cmake_minimum_required(VERSION 3.0)
+set( CMAKE_VERBOSE_MAKEFILE ON )
 
-project( programming-mmo )
+project("programming-mmo")
 
-find_package( OpenGL REQUIRED )
+find_package(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS})
 
-include_directories( ${OPENGL_INCLUDE_DIRS} )
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIRS})
 
-set( GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
-set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
+INCLUDE(FindPkgConfig) # Gives us PKG_SEARCH_MODULE function
+PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0) # There isn't a sdl2_image-config.cmake for me so we need to use this i guess
 
-add_subdirectory( glfw )
+include_directories(${SDL2IMAGE_INCLUDE_DIRS})
 
-if( MSVC )
-    SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup" )
-endif()
 
-set( game-src
-     main.cpp
-     )
-     
-add_executable( programming-mmo WIN32 ${game-src} )
-target_link_libraries( programming-mmo ${OPENGL_LIBRARIES} glfw )
-if( MSVC )
-    if(${CMAKE_VERSION} VERSION_LESS "3.6.0") 
-        message( "\n\t[ WARNING ]\n\n\tCMake version lower than 3.6.\n\n\t - Please update CMake and rerun; OR\n\t - Manually set 'programming-mmo' as StartUp Project in Visual Studio.\n" )
-    else()
-        set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT programming-mmo )
-    endif()
-endif()
+set(VERSION_MAJOR "0")
+set(VERSION_MINOR "1")
+set(VERSION_PATCH "0")
+set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+
+file(GLOB PROJ_INCLUDE
+    "src/*.h"
+)
+set(SRC_DIR src)
+
+set(PROJ_SRC
+    ${SRC_DIR}/main.cpp
+    ${SRC_DIR}/atom.cpp
+    ${SRC_DIR}/fonts.cpp
+)
+
+add_executable(game src/main.cpp src/atom.cpp src/fonts.cpp)
+target_link_libraries(game ${SDL2_LIBRARIES})
+target_link_libraries(game ${OPENGL_LIBRARIES})
+target_link_libraries(game ${SDL2IMAGE_LIBRARIES})
+target_link_libraries(game SDL2_gfx)
+target_link_libraries(game SDL2_ttf)
